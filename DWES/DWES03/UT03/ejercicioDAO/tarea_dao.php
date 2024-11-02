@@ -1,27 +1,5 @@
 <?php
 
-class Database extends PDO {
-
-	
-	function __construct(){
-
-		$dsn = "mysql:dbname=test";
-		$username = "root";
-		$password = "";
-
-		try {  
-			parent::__construct( $dsn, $username, $password );  
-			$this->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );  
-	
-		}
-		catch(PDOException $e) {  
-
-		 echo 'ERROR: ' . $e->getMessage();
-		}   
-
-	}
-
-}
 class Persona
 {
     private $codigo;     // user id
@@ -70,18 +48,34 @@ class Persona
     // return an object populated based on the record's user id
     public static function getByCodigo($codigo)
     {
+
+        define('DB_HOST', 'localhost');
+        define('DB_USER', 'root');
+        define('DB_PASSWORD', '');
+        define('DB_SCHEMA', 'test');
+        define('DB_TBL_PREFIX', 'WROX_');
+
+        // establish a connection to the database server
+        try{
+            $GLOBALS['DB'] =  new PDO( "mysql:host=" . DB_HOST . ";dbname=" . DB_SCHEMA, DB_USER, DB_PASSWORD );
+
+        }catch(PDOExecption $e) {
+                print "Error!: " . $e->getMessage() . "</br>";
+        }
+
         $u = new Persona();
 
-		$conexion = new Database();
-		$sql = sprintf( "SELECT * FROM personas where codigo = %d", $codigo );
-		$rows = $conexion->query( $sql );
+        $sentencia = "select * from personas where codigo = ?";
+	    $resultado  = $GLOBALS['DB']->prepare($sentencia);
+	    $resultado->bindParam( 1, $codigo );
+	    $resultado->execute();
 		
-		if( $rows->rowCount()  == 0  )
+		if( $resultado->rowCount()  == 0  )
 			return null;
 		else
 		{
 			$u = new Persona();
-			$row = $rows->fetch();
+			$row = $resultado->fetch();
 			$u->nombre = $row['nombre'];
             $u->apellidos = $row['apellidos'];
             $u->direccion = $row['direccion'];
@@ -89,16 +83,33 @@ class Persona
             $u->codigo = $codigo;
 			return $u;
 		}
+
 	}
 	
 	// return an object populated based on the record's user id
     public static function getAll()
     {
+
+        define('DB_HOST', 'localhost');
+        define('DB_USER', 'root');
+        define('DB_PASSWORD', '');
+        define('DB_SCHEMA', 'test');
+        define('DB_TBL_PREFIX', 'WROX_');
+
+        // establish a connection to the database server
+        try{
+            $GLOBALS['DB'] =  new PDO( "mysql:host=" . DB_HOST . ";dbname=" . DB_SCHEMA, DB_USER, DB_PASSWORD );
+
+        }catch(PDOExecption $e) {
+                print "Error!: " . $e->getMessage() . "</br>";
+        }
+
         $v = array();
-		$conexion = new Database();
-        $sql = sprintf('SELECT * FROM personas' );
-        $rows = $conexion->query( $sql );
+        $sentencia = "select * from personas";
+	    $resultado  = $GLOBALS['DB']->prepare($sentencia);
+	    $resultado->execute();
 		
+        $rows = $resultado->fetchAll();
 
         foreach( $rows as $row )
 		{
@@ -119,24 +130,41 @@ class Persona
     // save the record to the database
     public function save()
     {
-		$conexion = new Database();
-		
+
+        define('DB_HOST', 'localhost');
+        define('DB_USER', 'root');
+        define('DB_PASSWORD', '');
+        define('DB_SCHEMA', 'test');
+        define('DB_TBL_PREFIX', 'WROX_');
+
+        // establish a connection to the database server
+        try{
+            $GLOBALS['DB'] =  new PDO( "mysql:host=" . DB_HOST . ";dbname=" . DB_SCHEMA, DB_USER, DB_PASSWORD );
+
+        }catch(PDOExecption $e) {
+                print "Error!: " . $e->getMessage() . "</br>";
+        }
+
         if ($this->codigo)
         {
-            $query = sprintf('UPDATE personas SET nombre = "%s" apellidos = "%s" WHERE codigo = %d',
-                $this->nombre,
-                $this->apellidos,
-                $this->codigo);
-            $rows = $conexion->exec( $query );
+            $sentencia = "UPDATE personas SET nombre = ? apellidos = ? direccion = ? localidad = ? WHERE codigo = ?";
+	        $resultado  = $GLOBALS['DB']->prepare($sentencia);
+	        $resultado->bindParam( 1, $this->nombre );
+            $resultado->bindParam( 2, $this->apellidos );
+            $resultado->bindParam( 3, $this->direccion );
+            $resultado->bindParam( 4, $this->localidad );
+	        $resultado->execute();
+
         }
         else
         {
-            $query = sprintf('INSERT INTO personas ( nombre, apellidos, direccion, localidad ) VALUES ("%s", "%s", "%s", "%s")',
-                $this->nombre,
-                $this->apellidos,
-                $this->direccion, 
-                $this->localidad );
-			$rows = $conexion->exec( $query );
+            $sentencia = "INSERT INTO personas ( nombre, apellidos, direccion, localidad ) VALUES (?,?,?,?)";
+            $resultado  = $GLOBALS['DB']->prepare($sentencia);
+	        $resultado->bindParam( 1, $this->nombre );
+            $resultado->bindParam( 2, $this->apellidos );
+            $resultado->bindParam( 3, $this->direccion );
+            $resultado->bindParam( 4, $this->localidad );
+	        $resultado->execute();
 
             $this->codigo = $conexion->lastInsertId();
         }
@@ -145,13 +173,26 @@ class Persona
 	// save the record to the database
     public function delete()
     {
-        $conexion = new Database();
-		
+		define('DB_HOST', 'localhost');
+        define('DB_USER', 'root');
+        define('DB_PASSWORD', '');
+        define('DB_SCHEMA', 'test');
+        define('DB_TBL_PREFIX', 'WROX_');
+
+        // establish a connection to the database server
+        try{
+            $GLOBALS['DB'] =  new PDO( "mysql:host=" . DB_HOST . ";dbname=" . DB_SCHEMA, DB_USER, DB_PASSWORD );
+
+        }catch(PDOExecption $e) {
+                print "Error!: " . $e->getMessage() . "</br>";
+        }
+
 		if ($this->codigo)
         {
-            $sql = sprintf('DELETE FROM personas WHERE codigo = %d',
-                     $this->codigo);
-            $conexion->exec( $sql );
+            $sentencia = "DELETE FROM personas WHERE codigo = ?";
+            $resultado  = $GLOBALS['DB']->prepare($sentencia);
+	        $resultado->bindParam( 1, $this->codigo );
+	        $resultado->execute();
         }
     }
 
@@ -159,9 +200,8 @@ class Persona
 
 function prueba()
 {
-	
-	
-	$p = new Persona();
+
+    $p = new Persona();
 	$p->nombre = "antonio";
 	$p->apellidos = "lujan";
     $p->direccion = "C/Juan N2";
@@ -172,6 +212,8 @@ function prueba()
 	echo "hola";
 	echo $a->nombre;
 	echo $a->apellidos;
+    echo $a->direccion;
+    echo $a->localidad;
 	
     $a->delete();
 
